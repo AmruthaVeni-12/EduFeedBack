@@ -1,0 +1,161 @@
+.admin-panel {
+  width: 100%;
+}
+
+.admin-panel h2 {
+  margin: 0 0 24px;
+  font-size: 1.8rem;
+  color: #fff;
+}
+
+.admin-panel h3 {
+  margin: 24px 0 16px;
+  font-size: 1.3rem;
+  color: #fff;
+}
+
+.register-form,
+.form-create,
+.section-form {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 24px;
+  border-radius: 12px;
+  margin-bottom: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.field {
+  display: block;
+  margin-bottom: 18px;
+}
+
+.field:last-child {
+  margin-bottom: 0;
+}
+
+.label {
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: rgba(255, 255, 255, 0.95);
+  font-size: 0.95rem;
+}
+
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.field input::placeholder,
+.field textarea::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.field select {
+  cursor: pointer;
+}
+
+.field select option {
+  background: #2b0763;
+  color: #fff;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+.btn.primary {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: #fff;
+}
+
+.btn.primary:hover {
+  background: linear-gradient(135deg, #9d67ff, #8b5cf6);
+  transform: translateY(-2px);
+}
+
+.registered-list,
+.forms-list {
+  margin-top: 32px;
+}
+
+.subjects-grid,
+.forms-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+
+.subject-item,
+.form-item {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.subject-item:hover,
+.form-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.subject-icon,
+.form-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+}
+
+.subject-item h4,
+.form-item h4 {
+  margin: 0 0 4px;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.subject-item p,
+.form-item p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.85rem;
+}
+
+.form-meta {
+  margin: 4px 0 !important;
+  font-weight: 500;
+}
+
+.form-desc {
+  margin-top: 8px !important;
+  font-size: 0.8rem;
+}
+
+.empty-state {
+  padding: 16px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+}

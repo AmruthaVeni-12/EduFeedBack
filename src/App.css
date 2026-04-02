@@ -1,0 +1,114 @@
+#root {
+  max-width: none;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/* App layout and global background for auth pages */
+.app-root{
+  --header-h:72px;
+  /* footer height is no longer a fixed variable; let content size itself */
+  min-height:100vh !important;
+  display:flex;
+  flex-direction:column;
+  align-items:stretch;
+  justify-content:flex-start;
+  background: linear-gradient(180deg, #7c3aed 0%, #5b21b6 60%, #2b0763 100%);
+  position:relative;
+  overflow:hidden;
+  background-size:cover;
+}
+.main{
+  flex:1 1 auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:2rem;
+  /* subtract header only so the footer can grow freely and remain visible */
+  min-height: calc(100vh - var(--header-h));
+  position:relative;
+  z-index:2;
+}
+.site-footer{ padding:18px 0; text-align:center; color:rgba(255,255,255,0.85); font-size:0.9rem; position:relative; z-index:4; height:auto; }
+
+.site-header{ padding:12px 0; text-align:center; color:rgba(255,255,255,0.95); font-weight:600; position:relative; z-index:4; height:var(--header-h) }
+
+/* Decorative shapes */
+.app-root::before{
+  content:'';
+  position:absolute;
+  width:1200px;
+  height:1200px;
+  right:-360px;
+  top:-360px;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.06), transparent 28%), linear-gradient(135deg, rgba(255,255,255,0.03), transparent 60%);
+  transform: rotate(25deg);
+  filter: blur(60px);
+  pointer-events:none;
+}
+.app-root::after{
+  content:'';
+  position:absolute;
+  width:920px;
+  height:920px;
+  left:-260px;
+  bottom:-260px;
+  background: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.03), transparent 40%), linear-gradient(90deg, rgba(255,255,255,0.02), transparent 60%);
+  transform: rotate(-10deg);
+  filter: blur(48px);
+  pointer-events:none;
+}
+
+/* subtle animated gradient overlay */
+.app-root .gradient-anim{ position:absolute; inset:0; z-index:0; opacity:0.12; pointer-events:none; background: linear-gradient(120deg, rgba(255,255,255,0.06), rgba(255,255,255,0.01)); background-size: 400% 400%; animation: shift 14s ease-in-out infinite; }
+
+@keyframes shift{
+  0%{ background-position:0% 50% }
+  50%{ background-position:100% 50% }
+  100%{ background-position:0% 50% }
+}
+
+/* subtle pattern overlay to fill edges */
+.app-root .pattern-overlay{ position:absolute; inset:0; z-index:1; pointer-events:none; background-image: radial-gradient(circle at 20% 20%, rgba(255,255,255,0.02) 0, transparent 30%), repeating-radial-gradient(circle at 80% 80%, rgba(255,255,255,0.01) 0, transparent 30%); opacity:0.06 }
+
+/* vignette around edges */
+.app-root::marker{ }
+.vignette{ position:absolute; inset:0; z-index:3; pointer-events:none; background: radial-gradient(ellipse at center, rgba(0,0,0,0) 40%, rgba(0,0,0,0.18) 100%); mix-blend-mode: multiply }
