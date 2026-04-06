@@ -30,6 +30,7 @@ export default function Dashboard({
   const [activeFormStartedAt, setActiveFormStartedAt] = useState(null)
   const [remainingSeconds, setRemainingSeconds] = useState(null)
   const [responseValue, setResponseValue] = useState('')
+  const [responses, setResponses] = useState({})
 
   // sample data for a student – 10 engineering subjects with 5 sections each
   const subjects = Array.from({length:10}, (_, i) => ({
@@ -51,7 +52,7 @@ export default function Dashboard({
     : subjects
 
   const openFormForResponse = (form) => {
-    const alreadySubmitted = submissions.some(s => s.formId === form.id)
+    const alreadySubmitted = submissions.some(s => s.formId === form.id && s.studentId === user.collegeId)
     if (alreadySubmitted) {
       alert('You have already submitted this form.')
       return
@@ -71,6 +72,18 @@ export default function Dashboard({
       return
     }
 
+    // Initialize responses for all questions
+    const initialResponses = {}
+    if (form.questions && form.questions.length > 0) {
+      form.questions.forEach(q => {
+        initialResponses[q.id] = q.type === 'rating' ? '1' : ''
+      })
+    } else if (form.type) {
+      // Fallback for old single-question forms
+      initialResponses[form.id] = form.type === 'rating' ? '1' : ''
+    }
+    
+    setResponses(initialResponses)
     setActiveForm(form)
     setActiveFormStartedAt(now)
     setResponseValue(form.type === 'rating' ? '1' : '')
@@ -114,28 +127,62 @@ export default function Dashboard({
       return
     }
 
-    const value = responseValue.toString().trim()
-    if (!value) {
-      alert('Please provide a response.')
+    // Validate all responses are filled
+    const allFilled = Object.values(responses).every(val => val.toString().trim())
+    if (!allFilled) {
+      alert('Please answer all questions.')
       return
     }
 
-    if (typeof onSubmitResponse === 'function') {
-      onSubmitResponse({
-        id: Date.now(),
-        formId: activeForm.id,
-        subjectId: activeForm.subjectId,
-        sectionId: activeForm.sectionId,
-        type: activeForm.type,
-        question: activeForm.question,
-        value,
-        submittedAt: new Date().toISOString(),
+    // Submit responses for each question
+    if (activeForm.questions && activeForm.questions.length > 0) {
+      activeForm.questions.forEach(question => {
+        const value = responses[question.id]?.toString().trim()
+        if (value) {
+          if (typeof onSubmitResponse === 'function') {
+            onSubmitResponse({
+              id: Date.now() + Math.random(),
+              formId: activeForm.id,
+              studentId: user.collegeId,
+              studentName: user.fullName,
+              subjectId: activeForm.subjectId,
+              sectionId: activeForm.sectionId,
+              type: question.type,
+              question: question.text,
+              value,
+              submittedAt: new Date().toISOString(),
+            })
+          }
+        }
       })
+    } else {
+      // Fallback for old single-question forms
+      const value = responseValue.toString().trim()
+      if (!value) {
+        alert('Please provide a response.')
+        return
+      }
+
+      if (typeof onSubmitResponse === 'function') {
+        onSubmitResponse({
+          id: Date.now(),
+          formId: activeForm.id,
+          studentId: user.collegeId,
+          studentName: user.fullName,
+          subjectId: activeForm.subjectId,
+          sectionId: activeForm.sectionId,
+          type: activeForm.type,
+          question: activeForm.question,
+          value,
+          submittedAt: new Date().toISOString(),
+        })
+      }
     }
 
     setActiveForm(null)
     setRemainingSeconds(null)
     setResponseValue('')
+    setResponses({})
     alert('Feedback submitted (demo).')
   }
 
@@ -269,7 +316,7 @@ export default function Dashboard({
                         const now = new Date()
                         const start = form.startDate ? new Date(form.startDate) : null
                         const end = form.endDate ? new Date(form.endDate) : null
-                        const completed = submissions.some(s => s.formId === form.id)
+                        const completed = submissions.some(s => s.formId === form.id && s.studentId === user.collegeId)
                         const upcoming = start && now < start
                         const closed = end && now > end
 
@@ -293,7 +340,7 @@ export default function Dashboard({
                               </div>
                             </div>
 
-                            <p className="form-desc">{form.question || form.title}</p>
+                            <p className="form-desc">{form.description || (form.questions?.length > 0 ? `${form.questions.length} question(s)` : (form.question || 'No description'))}</p>
                             <div className="form-dates">
                               {form.startDate && <span>Starts: {form.startDate}</span>}
                               {form.endDate && <span>Ends: {form.endDate}</span>}
@@ -329,6 +376,10 @@ export default function Dashboard({
                 if (!msg) return
                 onAddSuggestion({
                   id: Date.now(),
+                  studentId: user.collegeId,
+                  studentName: user.fullName,
+                  subjectId: user.subjectId,
+                  sectionId: user.sectionId,
                   category: 'Student',
                   message: msg,
                   createdAt: new Date().toISOString(),
@@ -348,59 +399,122 @@ export default function Dashboard({
           {activeForm && (
             <div className="modal-overlay">
               <div className="modal">
-                <h3>Answer: {activeForm.question || activeForm.title}</h3>
+                <h3>{activeForm.title}</h3>
                 <p style={{margin:'4px 0 12px', color:'rgba(255,255,255,0.75)'}}>
                   {activeForm.subjectName} • {activeForm.sectionName || activeForm.section}
                 </p>
 
-                {activeForm.type === 'rating' && (
-                  <label className="field">
-                    <div className="label">Select rating</div>
-                    <select value={responseValue} onChange={(e) => setResponseValue(e.target.value)}>
-                      {Array.from({length: (activeForm.scaleMax || 5)}, (_, i) => i + 1).map(n => (
-                        <option key={n} value={n}>{n}</option>
-                      ))}
-                    </select>
-                  </label>
-                )}
+                {activeForm.questions && activeForm.questions.length > 0 ? (
+                  // Multiple questions format
+                  <div style={{maxHeight: '400px', overflowY: 'auto', paddingRight: 8}}>
+                    {activeForm.questions.map((question, idx) => (
+                      <div key={question.id} style={{marginBottom: 20, paddingBottom: 16, borderBottom: idx < activeForm.questions.length - 1 ? '1px solid rgba(255,255,255,0.1)' : 'none'}}>
+                        <label className="field">
+                          <div className="label" style={{fontWeight: 500}}>{idx + 1}. {question.text}</div>
+                          
+                          {question.type === 'rating' && (
+                            <select 
+                              value={responses[question.id] || '1'} 
+                              onChange={(e) => setResponses({...responses, [question.id]: e.target.value})}
+                            >
+                              {Array.from({length: (question.scaleMax || 5)}, (_, i) => i + 1).map(n => (
+                                <option key={n} value={n}>{n}</option>
+                              ))}
+                            </select>
+                          )}
 
-                {activeForm.type === 'mcq' && (
-                  <label className="field">
-                    <div className="label">Choose an option</div>
-                    <select value={responseValue} onChange={(e) => setResponseValue(e.target.value)}>
-                      <option value="">Select...</option>
-                      {(activeForm.options || []).map(opt => (
-                        <option key={opt} value={opt}>{opt}</option>
-                      ))}
-                    </select>
-                  </label>
-                )}
+                          {question.type === 'mcq' && (
+                            <select 
+                              value={responses[question.id] || ''} 
+                              onChange={(e) => setResponses({...responses, [question.id]: e.target.value})}
+                            >
+                              <option value="">Select...</option>
+                              {(question.options || []).map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
+                              ))}
+                            </select>
+                          )}
 
-                {activeForm.type === 'yesno' && (
-                  <label className="field">
-                    <div className="label">Choose</div>
-                    <select value={responseValue} onChange={(e) => setResponseValue(e.target.value)}>
-                      <option value="">Select...</option>
-                      <option value="Yes">Yes</option>
-                      <option value="No">No</option>
-                    </select>
-                  </label>
-                )}
+                          {question.type === 'yesno' && (
+                            <select 
+                              value={responses[question.id] || ''} 
+                              onChange={(e) => setResponses({...responses, [question.id]: e.target.value})}
+                            >
+                              <option value="">Select...</option>
+                              <option value="Yes">Yes</option>
+                              <option value="No">No</option>
+                            </select>
+                          )}
 
-                {activeForm.type === 'text' && (
-                  <label className="field">
-                    <div className="label">Your response</div>
-                    <textarea
-                      value={responseValue}
-                      onChange={(e) => setResponseValue(e.target.value)}
-                      rows={5}
-                      placeholder="Write your feedback here..."
-                    />
-                  </label>
+                          {question.type === 'text' && (
+                            <textarea
+                              value={responses[question.id] || ''}
+                              onChange={(e) => setResponses({...responses, [question.id]: e.target.value})}
+                              rows={3}
+                              placeholder="Write your response here..."
+                            />
+                          )}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  // Fallback for old single-question forms
+                  <>
+                    <p style={{margin:'4px 0 12px', color:'rgba(255,255,255,0.75)'}}>
+                      {activeForm.question || activeForm.title}
+                    </p>
+
+                    {activeForm.type === 'rating' && (
+                      <label className="field">
+                        <div className="label">Select rating</div>
+                        <select value={responseValue} onChange={(e) => setResponseValue(e.target.value)}>
+                          {Array.from({length: (activeForm.scaleMax || 5)}, (_, i) => i + 1).map(n => (
+                            <option key={n} value={n}>{n}</option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+
+                    {activeForm.type === 'mcq' && (
+                      <label className="field">
+                        <div className="label">Choose an option</div>
+                        <select value={responseValue} onChange={(e) => setResponseValue(e.target.value)}>
+                          <option value="">Select...</option>
+                          {(activeForm.options || []).map(opt => (
+                            <option key={opt} value={opt}>{opt}</option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
+
+                    {activeForm.type === 'yesno' && (
+                      <label className="field">
+                        <div className="label">Choose</div>
+                        <select value={responseValue} onChange={(e) => setResponseValue(e.target.value)}>
+                          <option value="">Select...</option>
+                          <option value="Yes">Yes</option>
+                          <option value="No">No</option>
+                        </select>
+                      </label>
+                    )}
+
+                    {activeForm.type === 'text' && (
+                      <label className="field">
+                        <div className="label">Your response</div>
+                        <textarea
+                          value={responseValue}
+                          onChange={(e) => setResponseValue(e.target.value)}
+                          rows={5}
+                          placeholder="Write your feedback here..."
+                        />
+                      </label>
+                    )}
+                  </>
                 )}
 
                 {remainingSeconds !== null && (
-                  <div style={{marginBottom: 12, color: 'rgba(255,255,255,0.75)'}}>
+                  <div style={{marginBottom: 12, color: 'rgba(255,255,255,0.75)', marginTop: 16}}>
                     Time remaining: {Math.floor(remainingSeconds / 60).toString().padStart(2, '0')}:{(remainingSeconds % 60).toString().padStart(2, '0')}
                   </div>
                 )}
@@ -413,7 +527,7 @@ export default function Dashboard({
                   >
                     Submit
                   </button>
-                  <button className="btn" onClick={() => { setActiveForm(null); setRemainingSeconds(null) }}>Cancel</button>
+                  <button className="btn" onClick={() => { setActiveForm(null); setRemainingSeconds(null); setResponses({}); }}>Cancel</button>
                 </div>
               </div>
             </div>
