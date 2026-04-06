@@ -90,6 +90,11 @@ export default function AdminSuggestions({ suggestions, onAddSuggestion }) {
                 <div className="form-icon">💬</div>
                 <h4>{s.category || 'General'}</h4>
                 <p className="form-desc">{s.message}</p>
+                {s.studentName && (
+                  <p className="form-meta" style={{fontSize: 12, opacity: 0.85}}>
+                    <strong>From:</strong> {s.studentName} {s.studentId && `(${s.studentId})`}
+                  </p>
+                )}
                 <p className="form-meta" style={{fontSize: 12, opacity: 0.75}}>
                   {new Date(s.createdAt).toLocaleString()}
                 </p>

@@ -29,10 +29,17 @@ export default function AdminAnalysis({ registeredSubjects, createdForms, submis
 
   const getResponses = (formId) => submissions.filter(s => s.formId === formId)
 
-  const buildRatingData = (form) => {
-    const max = form.scaleMax || 5
+  const buildRatingData = (form, questionId = null) => {
+    let formQuestions = form.questions || []
+    if (formQuestions.length === 0 && form.type) {
+      // Fallback for old format
+      formQuestions = [{id: form.id, type: form.type, scaleMax: form.scaleMax}]
+    }
+    
+    const question = questionId ? formQuestions.find(q => q.id === questionId) : formQuestions[0]
+    const max = question?.scaleMax || 5
     const counts = Array.from({ length: max }, () => 0)
-    const responses = getResponses(form.id)
+    const responses = getResponses(form.id).filter(r => !questionId || r.questionId === questionId || !r.questionId)
     responses.forEach(r => {
       const val = parseInt(r.value, 10)
       if (!isNaN(val) && val >= 1 && val <= max) {
@@ -42,11 +49,18 @@ export default function AdminAnalysis({ registeredSubjects, createdForms, submis
     return counts
   }
 
-  const buildOptionData = (form) => {
-    const options = form.options || []
+  const buildOptionData = (form, questionId = null) => {
+    let formQuestions = form.questions || []
+    if (formQuestions.length === 0 && form.type) {
+      // Fallback for old format
+      formQuestions = [{id: form.id, type: form.type, options: form.options}]
+    }
+    
+    const question = questionId ? formQuestions.find(q => q.id === questionId) : formQuestions[0]
+    const options = question?.options || form.options || []
     const counts = {}
     options.forEach(o => { counts[o] = 0 })
-    getResponses(form.id).forEach(r => {
+    getResponses(form.id).filter(r => !questionId || r.questionId === questionId || !r.questionId).forEach(r => {
       const v = r.value
       if (v && counts[v] !== undefined) {
         counts[v]++
@@ -233,8 +247,115 @@ export default function AdminAnalysis({ registeredSubjects, createdForms, submis
             {createdForms.map(form => {
               const responses = getResponses(form.id)
               const responseCount = responses.length
+              const hasMultipleQuestions = form.questions && form.questions.length > 0
 
               const renderChart = () => {
+                // Handle new multi-question format
+                if (hasMultipleQuestions) {
+                  return (
+                    <div style={{display: 'flex', flexDirection: 'column', gap: 16}}>
+                      {form.questions.map(question => {
+                        const questionResponses = responses.filter(r => r.question === question.text)
+                        if (questionResponses.length === 0 && responses.length === 0) return null
+
+                        if (question.type === 'rating') {
+                          const counts = buildRatingData(form, question.id)
+                          const max = Math.max(...counts, 1)
+                          return (
+                            <div key={question.id}>
+                              <p style={{margin: '0 0 8px 0', fontSize: 12, opacity: 0.85}}><strong>{question.text}</strong></p>
+                              <div className="subject-breakdown">
+                                {counts.map((count, index) => {
+                                  const label = `${index + 1}`
+                                  const width = Math.round((count / max) * 100)
+                                  return (
+                                    <div className="breakdown-item" key={label}>
+                                      <div className="breakdown-label">{label}</div>
+                                      <div className="breakdown-bar">
+                                        <div className="bar-fill" style={{ width: `${width}%` }}></div>
+                                      </div>
+                                      <div className="breakdown-value">{count}</div>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )
+                        }
+
+                        if (question.type === 'mcq') {
+                          const counts = buildOptionData(form, question.id)
+                          const max = Math.max(...Object.values(counts), 1)
+                          return (
+                            <div key={question.id}>
+                              <p style={{margin: '0 0 8px 0', fontSize: 12, opacity: 0.85}}><strong>{question.text}</strong></p>
+                              <div className="subject-breakdown">
+                                {Object.entries(counts).map(([label, count]) => {
+                                  const width = Math.round((count / max) * 100)
+                                  return (
+                                    <div className="breakdown-item" key={label}>
+                                      <div className="breakdown-label">{label}</div>
+                                      <div className="breakdown-bar">
+                                        <div className="bar-fill" style={{ width: `${width}%` }}></div>
+                                      </div>
+                                      <div className="breakdown-value">{count}</div>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )
+                        }
+
+                        if (question.type === 'yesno') {
+                          const yes = questionResponses.filter(r => String(r.value).toLowerCase() === 'yes').length
+                          const no = questionResponses.filter(r => String(r.value).toLowerCase() === 'no').length
+                          const max = Math.max(yes, no, 1)
+                          return (
+                            <div key={question.id}>
+                              <p style={{margin: '0 0 8px 0', fontSize: 12, opacity: 0.85}}><strong>{question.text}</strong></p>
+                              <div className="subject-breakdown">
+                                {[['Yes', yes], ['No', no]].map(([label, count]) => {
+                                  const width = Math.round((count / max) * 100)
+                                  return (
+                                    <div className="breakdown-item" key={label}>
+                                      <div className="breakdown-label">{label}</div>
+                                      <div className="breakdown-bar">
+                                        <div className="bar-fill" style={{ width: `${width}%` }}></div>
+                                      </div>
+                                      <div className="breakdown-value">{count}</div>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          )
+                        }
+
+                        if (question.type === 'text') {
+                          return (
+                            <div key={question.id}>
+                              <p style={{margin: '0 0 8px 0', fontSize: 12, opacity: 0.85}}><strong>{question.text}</strong></p>
+                              <div className="forms-grid">
+                                {questionResponses.map(r => (
+                                  <div key={r.id} className="form-item">
+                                    <div className="form-icon">✏️</div>
+                                    <p className="form-desc">{r.value}</p>
+                                    <p className="form-meta" style={{fontSize:12, opacity:0.7}}>{new Date(r.submittedAt).toLocaleString()}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )
+                        }
+
+                        return null
+                      })}
+                    </div>
+                  )
+                }
+
+                // Handle old single-question format
                 if (form.type === 'rating') {
                   const counts = buildRatingData(form)
                   const max = Math.max(...counts, 1)
@@ -320,8 +441,14 @@ export default function AdminAnalysis({ registeredSubjects, createdForms, submis
               return (
                 <div className="breakdown-item" key={form.id} style={{flexDirection:'column', alignItems:'flex-start'}}>
                   <div style={{width:'100%'}}>
-                    <div className="breakdown-label" style={{fontWeight:'600'}}>{form.title} ({form.type || 'rating'})</div>
-                    <div style={{color:'rgba(255,255,255,0.7)', margin:'4px 0 8px'}}>{form.question}</div>
+                    <div className="breakdown-label" style={{fontWeight:'600'}}>{form.title}</div>
+                    {hasMultipleQuestions ? (
+                      <div style={{color:'rgba(255,255,255,0.7)', margin:'4px 0 8px'}}>
+                        Questions: {form.questions.length}
+                      </div>
+                    ) : (
+                      <div style={{color:'rgba(255,255,255,0.7)', margin:'4px 0 8px'}}>{form.question}</div>
+                    )}
                     <div style={{color:'rgba(255,255,255,0.7)', marginBottom:'8px'}}>Responses: {responseCount}</div>
                     {responseCount === 0 ? (
                       <p className="empty-state">No responses yet.</p>
@@ -332,6 +459,46 @@ export default function AdminAnalysis({ registeredSubjects, createdForms, submis
                 </div>
               )
             })}
+          </div>
+        )}
+      </div>
+
+      <div className="analysis-section">
+        <h3>Submission Details</h3>
+        {submissions.length === 0 ? (
+          <p className="empty-state">No submissions yet.</p>
+        ) : (
+          <div>
+            <div style={{marginBottom: 16}}>
+              <p style={{margin: '0 0 12px 0', color: 'rgba(255,255,255,0.85)'}}>
+                <strong>Total Submissions:</strong> {submissions.length}
+              </p>
+            </div>
+            <div className="forms-grid">
+              {submissions.map(sub => {
+                const form = createdForms.find(f => f.id === sub.formId)
+                return (
+                  <div key={sub.id} className="form-item">
+                    <div className="form-icon">📝</div>
+                    <h4 style={{margin: '8px 0 4px'}}>{form?.title || 'Form'}</h4>
+                    <p className="form-meta">
+                      <strong>Question:</strong> {sub.question}
+                    </p>
+                    <p className="form-meta">
+                      <strong>Response:</strong> {sub.value}
+                    </p>
+                    {sub.studentName && (
+                      <p className="form-meta">
+                        <strong>Student:</strong> {sub.studentName} {sub.studentId && `(${sub.studentId})`}
+                      </p>
+                    )}
+                    <p className="form-meta" style={{fontSize: 11, opacity: 0.7}}>
+                      {new Date(sub.submittedAt).toLocaleString()}
+                    </p>
+                  </div>
+                )
+              })}
+            </div>
           </div>
         )}
       </div>
