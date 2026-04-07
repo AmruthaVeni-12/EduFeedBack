@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import './Login.css'
+import { authAPI } from './api.js'
 
 export default function Login({ mode = 'signin', onLogin = () => {}, setMode = () => {}, subjects = [], sections = [] }) {
   const [role, setRole] = useState('student')
@@ -9,20 +10,72 @@ export default function Login({ mode = 'signin', onLogin = () => {}, setMode = (
   const [selectedSubject, setSelectedSubject] = useState('')
   const [selectedSection, setSelectedSection] = useState('')
   const [authMode, setAuthMode] = useState(mode)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+
   useEffect(() => { setAuthMode(mode) }, [mode])
 
   // Reset enrollment selections when switching between admin/student or signin/signup modes
   useEffect(() => {
     setSelectedSubject('')
     setSelectedSection('')
+    setError('')
   }, [role, authMode])
 
   const availableSections = sections.filter(s => String(s.subjectId) === String(selectedSubject))
 
-  function submit(e) {
+  async function submit(e) {
     e.preventDefault()
-    // here you'd normally call an API. For demo we accept any input.
-    onLogin({ fullName, collegeId, password, role, subjectId: selectedSubject, sectionId: selectedSection })
+    setIsLoading(true)
+    setError('')
+
+    try {
+      let userData;
+
+      if (authMode === 'signup') {
+        // Registration
+        if (role === 'admin') {
+          userData = await authAPI.register({
+            username: collegeId,
+            email: `${collegeId}@admin.com`,
+            password: password
+          })
+        } else {
+          // For students, we might need to create them differently
+          // This depends on your backend API design
+          userData = {
+            username: collegeId,
+            email: `${collegeId}@student.com`,
+            password: password,
+            role: 'student',
+            subjectId: selectedSubject,
+            sectionId: selectedSection
+          }
+        }
+      } else {
+        // Login
+        userData = await authAPI.login({
+          username: collegeId,
+          password: password
+        })
+      }
+
+      // Add role and enrollment info to user data
+      const completeUserData = {
+        ...userData,
+        role,
+        fullName,
+        subjectId: selectedSubject,
+        sectionId: selectedSection
+      }
+
+      onLogin(completeUserData)
+    } catch (error) {
+      console.error('Authentication error:', error)
+      setError(error.message || 'Authentication failed. Please try again.')
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -91,7 +144,23 @@ export default function Login({ mode = 'signin', onLogin = () => {}, setMode = (
             <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" />
           </label>
 
-          <button className="btn primary" type="submit">{authMode === 'signup' ? 'Sign Up' : 'Sign In'}</button>
+          {error && (
+            <div className="error-message" style={{
+              color: '#dc3545',
+              fontSize: '14px',
+              marginBottom: '12px',
+              padding: '8px',
+              backgroundColor: '#f8d7da',
+              border: '1px solid #f5c6cb',
+              borderRadius: '4px'
+            }}>
+              {error}
+            </div>
+          )}
+
+          <button className="btn primary" type="submit" disabled={isLoading}>
+            {isLoading ? 'Please wait...' : (authMode === 'signup' ? 'Sign Up' : 'Sign In')}
+          </button>
           <button className="btn ghost" type="button" onClick={() => { 
             if (role === 'admin') {
               setFullName('Demo Faculty'); 
