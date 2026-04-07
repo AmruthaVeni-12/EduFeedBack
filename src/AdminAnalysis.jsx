@@ -3,6 +3,7 @@ import { useState } from 'react'
 
 export default function AdminAnalysis({ registeredSubjects, createdForms, submissions = [], suggestions = [] }){
   const [showAdminDetailsForm, setShowAdminDetailsForm] = useState(false)
+  const [selectedSuggestion, setSelectedSuggestion] = useState(null)
   const [adminDetails, setAdminDetails] = useState({
     department: '',
     role: '',
@@ -499,6 +500,45 @@ export default function AdminAnalysis({ registeredSubjects, createdForms, submis
                 )
               })}
             </div>
+          </div>
+        )}
+      </div>
+
+      <div className="analysis-section">
+        <h3>Suggestions</h3>
+        {suggestions.length === 0 ? (
+          <p className="empty-state">No suggestions have been submitted yet.</p>
+        ) : (
+          <div className="forms-grid">
+            {suggestions.map(suggestion => (
+              <button
+                key={suggestion.id}
+                type="button"
+                className="form-item"
+                onClick={() => setSelectedSuggestion(suggestion)}
+                style={{textAlign: 'left', cursor: 'pointer'}}
+              >
+                <div className="form-icon">💡</div>
+                <h4 style={{margin: '8px 0 4px'}}>{suggestion.studentName || 'Student Suggestion'}</h4>
+                <p className="form-meta" style={{marginBottom: 6}}>{suggestion.text?.slice(0, 80) || 'No message provided...'}</p>
+                <p className="form-meta" style={{fontSize: 11, opacity: 0.7}}>
+                  {new Date(suggestion.createdAt || suggestion.submittedAt || Date.now()).toLocaleString()}
+                </p>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {selectedSuggestion && (
+          <div className="suggestion-detail" style={{marginTop: 16, padding: 18, borderRadius: 12, background: 'rgba(255,255,255,0.06)'}}>
+            <h4>Suggestion Detail</h4>
+            <p><strong>From:</strong> {selectedSuggestion.studentName || 'Student'} {selectedSuggestion.studentId ? `(${selectedSuggestion.studentId})` : ''}</p>
+            <p><strong>Subject:</strong> {selectedSuggestion.section?.subjectId || selectedSuggestion.subjectId || 'N/A'}</p>
+            <p><strong>Section:</strong> {selectedSuggestion.section?.id || selectedSuggestion.sectionId || 'N/A'}</p>
+            <p style={{marginTop: 12, whiteSpace: 'pre-wrap'}}>{selectedSuggestion.text}</p>
+            <button className="btn" type="button" onClick={() => setSelectedSuggestion(null)} style={{marginTop: 12}}>
+              Close
+            </button>
           </div>
         )}
       </div>

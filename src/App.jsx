@@ -97,12 +97,11 @@ function App() {
       await sectionAPI.delete(sectionId)
       setSubjectSections(prev => prev.filter(s => s.id !== sectionId))
       setCreatedForms(prev => prev.filter(f => f.sectionId !== sectionId))
+      setSubmissions(prev => prev.filter(s => s.sectionId !== sectionId))
     } catch (error) {
       console.error('Failed to delete section:', error)
       alert('Failed to delete section. Please try again.')
     }
-  }
-    setSubmissions(prev => prev.filter(s => s.sectionId !== sectionId))
   }
 
   const handleCreateForm = async (form) => {
@@ -138,7 +137,12 @@ function App() {
 
   const handleAddSuggestion = async (suggestion) => {
     try {
-      const newSuggestion = await suggestionAPI.create(suggestion)
+      const payload = {
+        studentName: suggestion.studentName,
+        text: suggestion.message || suggestion.text,
+        section: { id: suggestion.sectionId },
+      }
+      const newSuggestion = await suggestionAPI.create(payload)
       setSuggestions(prev => [...prev, newSuggestion])
     } catch (error) {
       console.error('Failed to create suggestion:', error)
@@ -268,6 +272,6 @@ function App() {
       <Footer />
     </div>
   )
-
+}
 
 export default App

@@ -29,6 +29,9 @@ async function apiCall(endpoint, options = {}) {
     }
   } catch (error) {
     console.error('API call failed:', error);
+    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+      throw new Error('Unable to contact the backend server at http://localhost:8080. Make sure the Spring Boot backend is running.');
+    }
     throw error;
   }
 }

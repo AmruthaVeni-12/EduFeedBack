@@ -18,12 +18,13 @@ export default function AdminAddSections({ registeredSubjects, subjectSections, 
     e.preventDefault()
     if (!selectedSubject || !sectionName.trim()) return
 
-    const subject = registeredSubjects?.find(s => s.id === parseInt(selectedSubject))
+    const numericSubjectId = parseInt(selectedSubject, 10)
+    const subject = registeredSubjects?.find(s => s.id === numericSubjectId)
 
     if (editingSectionId) {
       onUpdateSection({
         id: editingSectionId,
-        subjectId: selectedSubject,
+        subjectId: numericSubjectId,
         subjectName: subject?.name,
         sectionName: sectionName,
         description: sectionDescription
@@ -34,7 +35,7 @@ export default function AdminAddSections({ registeredSubjects, subjectSections, 
 
     onAddSection({
       id: Date.now(),
-      subjectId: selectedSubject,
+      subjectId: numericSubjectId,
       subjectName: subject?.name,
       sectionName: sectionName,
       description: sectionDescription
@@ -43,7 +44,7 @@ export default function AdminAddSections({ registeredSubjects, subjectSections, 
   }
 
   const getSectionsForSubject = (subjectId) => {
-    return subjectSections?.filter(s => s.subjectId === subjectId) || []
+    return subjectSections?.filter(s => String(s.subjectId) === String(subjectId)) || []
   }
 
   return (
