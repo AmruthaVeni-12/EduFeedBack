@@ -2,6 +2,7 @@ import { useState } from 'react'
 import './AdminAddSections.css'
 
 export default function AdminAddSections({ registeredSubjects, subjectSections, onAddSection, onUpdateSection, onDeleteSection }){
+  console.log('AdminAddSections received subjects:', registeredSubjects, 'sections:', subjectSections)
   const [selectedSubject, setSelectedSubject] = useState('')
   const [sectionName, setSectionName] = useState('')
   const [sectionDescription, setSectionDescription] = useState('')

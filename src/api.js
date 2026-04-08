@@ -33,7 +33,10 @@ export const authAPI = {
 
 // Subject APIs
 export const subjectAPI = {
-  getAll: () => apiClient.get('/subjects'),
+  getAll: () => {
+    console.log('Calling subjectAPI.getAll()')
+    return apiClient.get('/subjects')
+  },
 
   create: (subjectData) => apiClient.post('/subjects', subjectData),
 
@@ -44,7 +47,10 @@ export const subjectAPI = {
 
 // Section APIs
 export const sectionAPI = {
-  getAll: () => apiClient.get('/sections'),
+  getAll: () => {
+    console.log('Calling sectionAPI.getAll()')
+    return apiClient.get('/sections')
+  },
 
   create: (subjectId, sectionData) => apiClient.post(`/sections?subjectId=${subjectId}`, sectionData),
 

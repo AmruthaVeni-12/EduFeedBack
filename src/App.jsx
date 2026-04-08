@@ -32,14 +32,18 @@ function App() {
       setIsLoading(true)
       setError(null)
 
+      console.log('Loading data from APIs...')
+
       const [subjectsData, sectionsData, formsData, submissionsData, suggestionsData, studentsData] = await Promise.all([
-        subjectAPI.getAll(),
-        sectionAPI.getAll(),
-        feedbackFormAPI.getAll(),
-        submissionAPI.getAll(),
-        suggestionAPI.getAll(),
-        studentAPI.getAll()
+        subjectAPI.getAll().catch(err => { console.error('Subjects API failed:', err); return [] }),
+        sectionAPI.getAll().catch(err => { console.error('Sections API failed:', err); return [] }),
+        feedbackFormAPI.getAll().catch(err => { console.error('Forms API failed:', err); return [] }),
+        submissionAPI.getAll().catch(err => { console.error('Submissions API failed:', err); return [] }),
+        suggestionAPI.getAll().catch(err => { console.error('Suggestions API failed:', err); return [] }),
+        studentAPI.getAll().catch(err => { console.error('Students API failed:', err); return [] })
       ])
+
+      console.log('API responses:', { subjectsData, sectionsData, formsData })
 
       setRegisteredSubjects(subjectsData)
       setSubjectSections(sectionsData)

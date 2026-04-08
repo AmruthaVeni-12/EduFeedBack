@@ -2,6 +2,7 @@ import { useState } from 'react'
 import './AdminRegister.css'
 
 export default function AdminRegister({ registeredSubjects, onRegisterSubject }){
+  console.log('AdminRegister received subjects:', registeredSubjects)
   const [subjectName, setSubjectName] = useState('')
   const [subjectCode, setSubjectCode] = useState('')
 
