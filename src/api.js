@@ -59,6 +59,8 @@ export const studentAPI = {
 
   create: (studentData) => apiClient.post('/students', studentData),
 
+  enroll: (subjectId, sectionId, studentData) => apiClient.post(`/students/enroll?subjectId=${subjectId}&sectionId=${sectionId}`, studentData),
+
   update: (id, studentData) => apiClient.put(`/students/${id}`, studentData),
 
   delete: (id) => apiClient.delete(`/students/${id}`),

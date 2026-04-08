@@ -164,10 +164,9 @@ function App() {
     try {
       const studentData = {
         studentName: user.fullName,
-        email: `${user.username}@student.com`,
-        section: { id: sectionId }
+        email: `${user.username}@student.com`
       }
-      const newStudent = await studentAPI.create(studentData)
+      const newStudent = await studentAPI.enroll(subjectId, sectionId, studentData)
       setStudents(prev => [...prev, newStudent])
 
       setUser(prev => {
