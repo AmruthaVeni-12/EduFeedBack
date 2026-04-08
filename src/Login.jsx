@@ -29,6 +29,18 @@ export default function Login({ mode = 'signin', onLogin = () => {}, setMode = (
     setIsLoading(true)
     setError('')
 
+    if (!collegeId.trim() || !password.trim()) {
+      setError('Please fill in all required fields.')
+      setIsLoading(false)
+      return
+    }
+
+    if (role === 'student' && (!selectedSubject || !selectedSection)) {
+      setError('Please select both subject and section.')
+      setIsLoading(false)
+      return
+    }
+
     try {
       let userData;
 
@@ -60,7 +72,7 @@ export default function Login({ mode = 'signin', onLogin = () => {}, setMode = (
         })
       }
 
-      // Add role and enrollment info to user data
+      // Add role and enrollment info to user data (for both signup and signin)
       const completeUserData = {
         ...userData,
         role,
@@ -116,7 +128,7 @@ export default function Login({ mode = 'signin', onLogin = () => {}, setMode = (
             <div className="label">{role === 'student' ? 'Student ID' : 'Faculty ID'}</div>
             <input value={collegeId} onChange={(e) => setCollegeId(e.target.value)} placeholder={role === 'student' ? 'e.g., STU001' : 'e.g., FAC001'} />
           </label>
-          {role === 'student' && authMode === 'signup' && (
+          {role === 'student' && (
             <>
               <label className="field">
                 <div className="label">Select Subject</div>
