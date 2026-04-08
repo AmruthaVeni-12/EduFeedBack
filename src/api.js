@@ -1,161 +1,100 @@
+import axios from 'axios';
+
 // API Configuration and Service Functions
-const API_BASE_URL = 'http://localhost:8080/api';
+const apiClient = axios.create({
+  baseURL: 'http://localhost:8080/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 10000,
+});
 
-// Helper function for API calls
-async function apiCall(endpoint, options = {}) {
-  const url = `${API_BASE_URL}${endpoint}`;
-  const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  };
-
-  try {
-    const response = await fetch(url, config);
-
-    if (!response.ok) {
-      const errorData = await response.text();
-      throw new Error(`API Error: ${response.status} - ${errorData}`);
+apiClient.interceptors.response.use(
+  (response) => response.data,
+  (error) => {
+    if (error.response) {
+      const status = error.response.status;
+      const data = error.response.data;
+      return Promise.reject(new Error(`API Error: ${status} - ${JSON.stringify(data)}`));
     }
-
-    // Handle empty responses
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      return await response.json();
-    } else {
-      return await response.text();
+    if (error.request) {
+      return Promise.reject(new Error('Unable to contact the backend server at http://localhost:8080. Make sure the Spring Boot backend is running.'));
     }
-  } catch (error) {
-    console.error('API call failed:', error);
-    if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-      throw new Error('Unable to contact the backend server at http://localhost:8080. Make sure the Spring Boot backend is running.');
-    }
-    throw error;
+    return Promise.reject(error);
   }
-}
+);
 
 // Authentication APIs
 export const authAPI = {
-  register: (userData) => apiCall('/auth/register', {
-    method: 'POST',
-    body: JSON.stringify(userData),
-  }),
+  register: (userData) => apiClient.post('/auth/register', userData),
 
-  login: (credentials) => apiCall('/auth/login', {
-    method: 'POST',
-    body: JSON.stringify(credentials),
-  }),
+  login: (credentials) => apiClient.post('/auth/login', credentials),
 };
 
 // Subject APIs
 export const subjectAPI = {
-  getAll: () => apiCall('/subjects'),
+  getAll: () => apiClient.get('/subjects'),
 
-  create: (subjectData) => apiCall('/subjects', {
-    method: 'POST',
-    body: JSON.stringify(subjectData),
-  }),
+  create: (subjectData) => apiClient.post('/subjects', subjectData),
 
-  update: (id, subjectData) => apiCall(`/subjects/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(subjectData),
-  }),
+  update: (id, subjectData) => apiClient.put(`/subjects/${id}`, subjectData),
 
-  delete: (id) => apiCall(`/subjects/${id}`, {
-    method: 'DELETE',
-  }),
+  delete: (id) => apiClient.delete(`/subjects/${id}`),
 };
 
 // Section APIs
 export const sectionAPI = {
-  getAll: () => apiCall('/sections'),
+  getAll: () => apiClient.get('/sections'),
 
-  create: (subjectId, sectionData) => apiCall(`/sections?subjectId=${subjectId}`, {
-    method: 'POST',
-    body: JSON.stringify(sectionData),
-  }),
+  create: (subjectId, sectionData) => apiClient.post(`/sections?subjectId=${subjectId}`, sectionData),
 
-  update: (id, sectionData) => apiCall(`/sections/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(sectionData),
-  }),
+  update: (id, sectionData) => apiClient.put(`/sections/${id}`, sectionData),
 
-  delete: (id) => apiCall(`/sections/${id}`, {
-    method: 'DELETE',
-  }),
+  delete: (id) => apiClient.delete(`/sections/${id}`),
 };
 
 // Student APIs
 export const studentAPI = {
-  getAll: () => apiCall('/students'),
+  getAll: () => apiClient.get('/students'),
 
-  create: (studentData) => apiCall('/students', {
-    method: 'POST',
-    body: JSON.stringify(studentData),
-  }),
+  create: (studentData) => apiClient.post('/students', studentData),
 
-  update: (id, studentData) => apiCall(`/students/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(studentData),
-  }),
+  update: (id, studentData) => apiClient.put(`/students/${id}`, studentData),
 
-  delete: (id) => apiCall(`/students/${id}`, {
-    method: 'DELETE',
-  }),
+  delete: (id) => apiClient.delete(`/students/${id}`),
 };
 
 // Feedback Form APIs
 export const feedbackFormAPI = {
-  getAll: () => apiCall('/forms'),
+  getAll: () => apiClient.get('/forms'),
 
-  create: (formData) => apiCall('/forms', {
-    method: 'POST',
-    body: JSON.stringify(formData),
-  }),
+  create: (formData) => apiClient.post('/forms', formData),
 
-  getById: (id) => apiCall(`/forms/${id}`),
+  getById: (id) => apiClient.get(`/forms/${id}`),
 
-  update: (id, formData) => apiCall(`/forms/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(formData),
-  }),
+  update: (id, formData) => apiClient.put(`/forms/${id}`, formData),
 
-  delete: (id) => apiCall(`/forms/${id}`, {
-    method: 'DELETE',
-  }),
+  delete: (id) => apiClient.delete(`/forms/${id}`),
 };
 
 // Feedback Submission APIs
 export const submissionAPI = {
-  getAll: () => apiCall('/submissions'),
+  getAll: () => apiClient.get('/submissions'),
 
-  create: (submissionData) => apiCall('/submissions', {
-    method: 'POST',
-    body: JSON.stringify(submissionData),
-  }),
+  create: (submissionData) => apiClient.post('/submissions', submissionData),
 
-  getByForm: (formId) => apiCall(`/submissions/form/${formId}`),
+  getByForm: (formId) => apiClient.get(`/submissions/form/${formId}`),
 };
 
 // Suggestion APIs
 export const suggestionAPI = {
-  getAll: () => apiCall('/suggestions'),
+  getAll: () => apiClient.get('/suggestions'),
 
-  create: (suggestionData) => apiCall('/suggestions', {
-    method: 'POST',
-    body: JSON.stringify(suggestionData),
-  }),
+  create: (suggestionData) => apiClient.post('/suggestions', suggestionData),
 
-  update: (id, suggestionData) => apiCall(`/suggestions/${id}`, {
-    method: 'PUT',
-    body: JSON.stringify(suggestionData),
-  }),
+  update: (id, suggestionData) => apiClient.put(`/suggestions/${id}`, suggestionData),
 
-  delete: (id) => apiCall(`/suggestions/${id}`, {
-    method: 'DELETE',
-  }),
+  delete: (id) => apiClient.delete(`/suggestions/${id}`),
 };
 
 export default {
