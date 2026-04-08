@@ -68,7 +68,7 @@ export const studentAPI = {
 export const feedbackFormAPI = {
   getAll: () => apiClient.get('/forms'),
 
-  create: (formData) => apiClient.post('/forms', formData),
+  create: (formData) => apiClient.post(`/forms?sectionId=${formData.sectionId}`, formData),
 
   getById: (id) => apiClient.get(`/forms/${id}`),
 

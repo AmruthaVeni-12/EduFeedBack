@@ -84,8 +84,8 @@ export default function AdminFeedbackForm({ registeredSubjects, subjectSections,
       return
     }
 
-    const subject = registeredSubjects?.find(s => s.id === parseInt(selectedSubject))
-    const section = subjectSections?.find(s => s.id === parseInt(selectedSection))
+    const subject = registeredSubjects?.find(s => String(s.id) === String(selectedSubject))
+    const section = subjectSections?.find(s => String(s.id) === String(selectedSection))
 
     const formPayload = {
       id: editingFormId || Date.now(),
@@ -112,7 +112,7 @@ export default function AdminFeedbackForm({ registeredSubjects, subjectSections,
     resetForm()
   }
 
-  const sectionsForSubject = subjectSections.filter(s => s.subjectId === selectedSubject)
+  const sectionsForSubject = subjectSections.filter(s => String(s.subjectId) === String(selectedSubject))
 
   return (
     <div className="admin-panel">
